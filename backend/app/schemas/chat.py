@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class ChatRequest(BaseModel):
     message: str
     item_id: int | None = None
+    mode: str = "full"  # "rag" | "discovery" | "full"
 
 
 class DocumentSuggestion(BaseModel):

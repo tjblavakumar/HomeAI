@@ -48,3 +48,31 @@ def list_documents_for_item(item_id: int, db: Session = Depends(get_db)) -> list
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
     return list(db.execute(select(Document).where(Document.item_id == item_id)).scalars())
+
+
+@router.post("/documents/{document_id}/reindex", response_model=DocumentOut)
+def reindex_document(
+    document_id: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+) -> Document:
+    document = db.get(Document, document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    if document.doc_type == "driver":
+        raise HTTPException(status_code=400, detail="Driver documents are link-only and cannot be re-indexed")
+
+    # Remove existing Chroma chunks for this document
+    if document.indexed_status in ("indexed", "downloaded", "failed"):
+        from app.services.vector_store import get_manuals_collection
+        col = get_manuals_collection()
+        existing_ids = col.get(where={"document_id": document_id})["ids"] or []
+        if existing_ids:
+            col.delete(ids=existing_ids)
+
+    # Reset status and re-process
+    document.indexed_status = "pending"
+    document.local_path = None
+    db.commit()
+    background_tasks.add_task(process_document, document.id)
+    return document

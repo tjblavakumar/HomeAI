@@ -3,6 +3,15 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
+class ItemFromUrl(BaseModel):
+    """Create an item + download and index a manual from a direct URL."""
+    url: str
+    name: str
+    category_id: int
+    brand: str | None = None
+    model_number: str | None = None
+
+
 class ItemCreate(BaseModel):
     name: str
     brand: str | None = None

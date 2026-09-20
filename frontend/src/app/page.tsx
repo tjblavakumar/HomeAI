@@ -12,27 +12,27 @@ export default async function Home() {
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-screen bg-zinc-50 dark:bg-black">
+    <div className="flex flex-col flex-1 min-h-screen" style={{ backgroundColor: '#0a1628' }}>
       <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+            <h1 className="text-2xl font-semibold text-white">
               HomeAI — Household Knowledge Base
             </h1>
-            <p className="mt-1 text-zinc-600 dark:text-zinc-400">
-              Your household&apos;s items, manuals, and troubleshooting assistant.
+            <p className="mt-1 text-slate-300">
+              Ask questions about your household items, or browse categories below.
             </p>
           </div>
           <a
             href="/items/new"
-            className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium whitespace-nowrap text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900"
+            className="rounded-md bg-purple-700 px-3 py-1.5 text-sm font-medium whitespace-nowrap text-white hover:bg-purple-600"
           >
             + Add item
           </a>
         </div>
 
         {error && (
-          <p className="mt-6 rounded-md bg-red-50 px-4 py-3 text-red-700 dark:bg-red-950 dark:text-red-300">
+          <p className="mt-6 rounded-md bg-red-900/60 px-4 py-3 text-red-200">
             {error}
           </p>
         )}
@@ -42,19 +42,19 @@ export default async function Home() {
             <a
               key={category.id}
               href={`/categories/${category.id}`}
-              className="flex flex-col items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-6 text-center shadow-sm transition hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+              className="flex flex-col items-center gap-2 rounded-lg border border-blue-200 bg-blue-100 px-4 py-6 text-center shadow-sm transition hover:shadow-md"
             >
-              <span className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+              <span className="text-3xl font-bold text-slate-800">
                 {category.item_count}
               </span>
-              <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              <span className="text-sm font-medium text-slate-700">
                 {category.name}
               </span>
             </a>
           ))}
         </div>
 
-        <ChatBox />
+        <ChatBox mode="rag" />
       </main>
     </div>
   );

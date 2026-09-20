@@ -1,22 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a1628;
+  --foreground: #e2e8f0;
+  --card-bg: #dbeafe;
+  --card-text: #1e293b;
+  --chatbox-bg: #2d1b4e;
+  --chatbox-text: #e2e8f0;
+  --card-border: #bfdbfe;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card-bg: var(--card-bg);
+  --color-card-text: var(--card-text);
+  --color-chatbox-bg: var(--chatbox-bg);
+  --color-chatbox-text: var(--chatbox-text);
+  --color-card-border: var(--card-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

@@ -23,8 +23,18 @@ def _client() -> OpenAI:
 INTENT_SYSTEM_PROMPT = """You are the intent-extraction step of a household knowledge-base \
 assistant. Given a user's chat message, decide whether they want to (a) find manuals, \
 drivers, or accessories for a product ("find_docs"), (b) troubleshoot a problem with an \
-existing item ("troubleshoot"), or (c) something else ("other"). Extract the brand and \
-model/product name if mentioned. Respond ONLY with JSON in this shape:
+existing item ("troubleshoot"), or (c) something else ("other").
+
+Rules:
+- "troubleshoot" includes: how to use, how to clean, how to fix, how to maintain, won't \
+start, error message, parts replacement, setup/installation questions, troubleshooting, FAQ.
+- "find_docs" includes: find/buy manuals, find drivers, find accessories, what ink/parts/\
+batteries does it use, specs/features.
+- "other": greetings, chit-chat, off-topic questions.
+
+Extract the brand and a full, descriptive product name. Include the year, model, and trim \
+level (e.g. "2017 Toyota Sienna LE", "Ninja CAFE Luxe3", "Canon GX1020"). Never output a \
+single word or a short fragment as product_name. Respond ONLY with JSON in this shape:
 {"intent": "find_docs"|"troubleshoot"|"other", "brand": string|null, "model": string|null, \
 "product_name": string|null, "query": string}"""
 
@@ -46,8 +56,16 @@ CATEGORIZE_SYSTEM_PROMPT = """You are categorizing raw web search results about 
 product for a household knowledge-base. For each relevant result, classify it into exactly \
 one of: "manual" (owner/user manual or troubleshooting guide), "troubleshooting" (a dedicated \
 troubleshooting/FAQ page), "driver" (software/driver/installer download page), or "accessory" \
-(compatible accessories, e.g. replacement batteries, ink cartridges, filters). Discard \
-irrelevant or duplicate results. Respond ONLY with JSON in this shape:
+(compatible accessories, e.g. replacement batteries, ink cartridges, filters).
+
+IMPORTANT FILTERING RULES:
+- Discard generic "collection of links" pages that aggregate many different manuals (e.g. \
+"Links to Car Owner's Manuals From Every Brand", "Free Car Owner Manuals PDF", "All Manuals \
+Directory"). Prefer official manufacturer pages or direct PDF links.
+- Discard irrelevant or duplicate results.
+- Only keep results that are directly about the specific product stated above.
+
+Respond ONLY with JSON in this shape:
 {"documents": [{"doc_type": "manual"|"troubleshooting"|"driver"|"accessory", "title": string, \
 "source_url": string, "reason": string}]}"""
 

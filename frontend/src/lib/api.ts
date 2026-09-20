@@ -61,11 +61,11 @@ export type ChatResponse = {
   citations: Citation[];
 };
 
-export async function sendChatMessage(message: string, itemId?: number): Promise<ChatResponse> {
+export async function sendChatMessage(message: string, itemId?: number, mode?: string): Promise<ChatResponse> {
   const res = await fetch(`${API_URL}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, item_id: itemId }),
+    body: JSON.stringify({ message, item_id: itemId, mode: mode ?? "full" }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
@@ -86,6 +86,16 @@ export async function getItemsForCategory(categoryId: number): Promise<Item[]> {
   return res.json();
 }
 
+export async function getItems(categoryId?: number, docType?: string): Promise<Item[]> {
+  const params = new URLSearchParams();
+  if (categoryId !== undefined) params.set("category_id", String(categoryId));
+  if (docType) params.set("doc_type", docType);
+  const qs = params.toString();
+  const res = await fetch(`${API_URL}/items${qs ? "?" + qs : ""}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to load items");
+  return res.json();
+}
+
 export async function getItem(itemId: number): Promise<Item> {
   const res = await fetch(`${API_URL}/items/${itemId}`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to load item");
@@ -100,6 +110,11 @@ export async function createItem(payload: ItemCreate): Promise<Item> {
   });
   if (!res.ok) throw new Error("Failed to create item");
   return res.json();
+}
+
+export async function deleteItem(itemId: number): Promise<void> {
+  const res = await fetch(`${API_URL}/items/${itemId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete item");
 }
 
 export type Document = {
@@ -145,6 +160,56 @@ export type ScanResult = {
   guessed_name: string | null;
 };
 
+export type ItemFromUrl = {
+  url: string;
+  name: string;
+  category_id: number;
+  brand?: string;
+  model_number?: string;
+};
+
+export async function createItemFromUrl(payload: ItemFromUrl): Promise<Item> {
+  const res = await fetch(`${API_URL}/items/from-url`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.detail ?? "Failed to create item from URL");
+  }
+  return res.json();
+}
+
+export async function reindexDocument(documentId: number): Promise<Document> {
+  const res = await fetch(`${API_URL}/documents/${documentId}/reindex`, { method: "POST" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.detail ?? "Failed to re-index document");
+  }
+  return res.json();
+}
+
+export async function uploadItemPdf(payload: {
+  file: File;
+  name: string;
+  category_id: number;
+  brand?: string;
+  model_number?: string;
+}): Promise<Item> {
+  const formData = new FormData();
+  formData.append("file", payload.file);
+  formData.append("name", payload.name);
+  formData.append("category_id", String(payload.category_id));
+  if (payload.brand) formData.append("brand", payload.brand);
+  if (payload.model_number) formData.append("model_number", payload.model_number);
+  const res = await fetch(`${API_URL}/items/upload`, { method: "POST", body: formData });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.detail ?? "Failed to upload PDF");
+  }
+  return res.json();
+}
 export async function scanItemPhoto(file: File): Promise<ScanResult> {
   const formData = new FormData();
   formData.append("file", file);
