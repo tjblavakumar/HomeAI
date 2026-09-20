@@ -85,6 +85,47 @@ def categorize_search_results(product_name: str, results: list[dict]) -> list[di
     return parsed.get("documents", [])
 
 
+PRODUCT_GUESS_SYSTEM_PROMPT = """You identify consumer/household network devices from \
+scan signals. Given a device's MAC vendor (manufacturer), hostname, and open TCP ports, \
+produce a concise best-guess product label and a device type.
+
+Rules:
+- The label should read like a product a person would recognize, e.g. "Amazon Echo Dot", \
+"Canon PIXMA Printer", "Synology NAS", "TP-Link Router", "Apple iPhone". If you only know \
+the manufacturer, use the real manufacturer name followed by "device" (for example \
+"Apple device", "Canon device"). Always substitute the actual vendor name — never output \
+a placeholder like "<Vendor>". Never invent a specific model number you can't infer; keep \
+it general when unsure.
+- device_type must be one of: "printer", "router", "nas", "computer", "phone", \
+"tv", "speaker", "camera", "iot", "generic".
+- Keep the label under 40 characters. Do not include the IP or MAC.
+
+Respond ONLY with JSON: {"label": string, "device_type": string}"""
+
+
+def guess_product(vendor: str | None, hostname: str | None, open_ports: list[int]) -> dict:
+    """Best-guess a friendly product label + device type from scan signals.
+
+    Returns {"label": str, "device_type": str}. Raises LLMNotConfiguredError if
+    no key is set (callers should treat that as "skip refinement").
+    """
+    client = _client()
+    payload = {
+        "vendor": vendor or "unknown",
+        "hostname": hostname or "unknown",
+        "open_ports": open_ports,
+    }
+    response = client.chat.completions.create(
+        model=settings.openai_chat_model,
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": PRODUCT_GUESS_SYSTEM_PROMPT},
+            {"role": "user", "content": json.dumps(payload)},
+        ],
+    )
+    return json.loads(response.choices[0].message.content or "{}")
+
+
 def embed_texts(texts: list[str]) -> list[list[float]]:
     client = _client()
     response = client.embeddings.create(model=settings.openai_embedding_model, input=texts)

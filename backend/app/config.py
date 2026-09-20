@@ -17,6 +17,16 @@ class Settings(BaseSettings):
     database_url: str = f"sqlite:///{DATA_DIR / 'app.db'}"
     chroma_dir: str = str(DATA_DIR / "chroma")
     uploads_dir: str = str(DATA_DIR / "uploads")
+    downloads_dir: str = str(DATA_DIR / "downloads")
+
+    # Local-network scan settings
+    scan_subnet: str = ""  # e.g. "192.168.1.0/24"; empty = auto-detect
+    scan_tcp_probe: bool = True  # probe common TCP ports to find hosts not in ARP cache
+    # IEEE OUI (MAC vendor) database. Downloaded once to oui_db_path if missing.
+    oui_db_path: str = str(DATA_DIR / "oui.txt")
+    oui_db_url: str = "https://standards-oui.ieee.org/oui/oui.txt"
+    # Use the LLM to refine a friendly product label from vendor/hostname/ports.
+    scan_llm_label: bool = True
 
 
 settings = Settings()
@@ -25,3 +35,4 @@ settings = Settings()
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 Path(settings.chroma_dir).mkdir(parents=True, exist_ok=True)
 Path(settings.uploads_dir).mkdir(parents=True, exist_ok=True)
+Path(settings.downloads_dir).mkdir(parents=True, exist_ok=True)
